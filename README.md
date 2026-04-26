@@ -1,11 +1,32 @@
-<div align="center">
+# Eixo — Recomposição Coerente (MVP)
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+O **Eixo** é uma ferramenta de intervenção emocional imediata. Este MVP foca na estabilidade técnica e segurança da autenticação por e-mail.
 
-  <h1>Built with AI Studio</h2>
+## 🔐 Segurança e Configuração
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+Para que o aplicativo funcione, você **PRECISA** configurar o segredo do JWT.
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+### Variáveis Obrigatórias
+| Variável | Descrição | Onde Configurar |
+| :--- | :--- | :--- |
+| `JWT_SECRET` | Chave privada para assinar tokens. | **Settings > Secrets** (AI Studio) |
 
-</div>
+### Variáveis Opcionais (Stub/Fundação)
+As variáveis abaixo não são obrigatórias para o funcionamento básico:
+- `MERCADO_PAGO_ACCESS_TOKEN`: Para pagamentos reais.
+- `SPOTIFY_CLIENT_ID`: Para metadados oficiais de trilhas.
+- `SPOTIFY_CLIENT_SECRET`: Para metadados oficiais de trilhas.
+
+## 🚀 Como Testar
+1. Acesse o menu **Settings > Secrets** no AI Studio.
+2. Adicione `JWT_SECRET` com um valor aleatório.
+3. Utilize o login por e-mail. **Sua conta será criada automaticamente no primeiro acesso.**
+
+## 📍 Status do MVP Atual
+- ✅ Login/Cadastro simplificado por e-mail e senha.
+- ✅ Autenticação via JWT (Segurança reforçada).
+- ✅ Persistência em SQLite (Usuários e Sessões).
+- ✅ Intervenção de Respiração Quadrada.
+- ✅ Histórico de sessões funcional.
+- ⚠️ Google Login: **Suspenso nesta versão.**
+- 💡 Mercado Pago/Spotify: Integrados como fundação opcional.
