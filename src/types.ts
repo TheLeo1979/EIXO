@@ -7,19 +7,32 @@ export interface User {
 
 export interface Session {
   id: number;
-  mood: string;
-  intensity: number;
-  intervention_type: string;
+  moodBefore: MoodType;
+  intensityBefore: number;
+  moodAfter?: MoodType;
+  intensityAfter?: number;
+  feedback?: string;
+  interventionId: string;
   completed: boolean;
+  duration?: number;
   created_at: string;
 }
 
-export type Mood = 'calm' | 'anxious' | 'sad' | 'energetic' | 'tired';
+export type MoodType = 
+  | 'acelerado' 
+  | 'sobrecarregado' 
+  | 'travado' 
+  | 'inseguro' 
+  | 'desligar'
+  | 'calmo'
+  | 'cansado';
 
 export interface Intervention {
   id: string;
   title: string;
   description: string;
+  type: 'breathing' | 'audio' | 'text' | 'external';
   duration: string;
   icon: string;
+  url?: string;
 }

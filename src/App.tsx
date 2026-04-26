@@ -16,15 +16,19 @@ import {
   ArrowRight
 } from 'lucide-react';
 import api from './services/api';
-import { User, Session, Mood } from './types';
+import { User, Session, MoodType, Intervention } from './types';
+import { MOOD_MAPPING } from './data/sessions';
 
 // Components
 import Auth from './components/Auth';
+import Onboarding from './components/Onboarding';
 import CheckIn from './components/CheckIn';
 import InterventionView from './components/InterventionView';
+import FeedbackView from './components/FeedbackView';
 import PremiumDetails from './components/PremiumDetails';
+import ProgressView from './components/ProgressView';
 
-type View = 'AUTH' | 'DASHBOARD' | 'CHECK_IN' | 'INTERVENTION' | 'PREMIUM' | 'HISTORY';
+type View = 'AUTH' | 'ONBOARDING' | 'DASHBOARD' | 'CHECK_IN' | 'INTERVENTION' | 'FEEDBACK' | 'PREMIUM' | 'PROGRESS';
 
 export default function App() {
   const [view, setView] = useState<View>('AUTH');
@@ -40,7 +44,8 @@ export default function App() {
     try {
       const { data } = await api.get('/me');
       setUser(data);
-      setView('DASHBOARD');
+      const isOnboarded = localStorage.getItem(`eixo_onboarded_${data.id}`);
+      setView(isOnboarded ? 'DASHBOARD' : 'ONBOARDING');
     } catch (e) {
       setUser(null);
       setView('AUTH');
@@ -53,6 +58,49 @@ export default function App() {
     localStorage.removeItem('eixo_token');
     setUser(null);
     setView('AUTH');
+  };
+
+  const handleOnboardingComplete = () => {
+    if (user) localStorage.setItem(`eixo_onboarded_${user.id}`, 'true');
+    setView('DASHBOARD');
+  };
+
+  const handleCheckInComplete = (mood: MoodType, intensity: number) => {
+    const recommendedInterventions = MOOD_MAPPING[mood] || ['box-breathing'];
+    setCurrentSession({
+      moodBefore: mood,
+      intensityBefore: intensity,
+      interventionId: recommendedInterventions[0]
+    });
+    setView('INTERVENTION');
+  };
+
+  const handleInterventionComplete = () => {
+    setView('FEEDBACK');
+  };
+
+  const handleFeedbackComplete = async (moodAfter: MoodType, feedback: string) => {
+    const sessionData = {
+      ...currentSession,
+      moodAfter,
+      feedback,
+      completed: true
+    };
+    
+    try {
+      if (user && user.id !== -1) {
+        await api.post('/sessions', sessionData);
+      } else {
+        // Guest mode: save to local storage
+        const guestHistory = JSON.parse(localStorage.getItem('eixo_guest_history') || '[]');
+        guestHistory.unshift({ ...sessionData, id: Date.now(), created_at: new Date().toISOString() });
+        localStorage.setItem('eixo_guest_history', JSON.stringify(guestHistory.slice(0, 50)));
+      }
+    } catch (e) {
+      console.error('Failed to sync session');
+    }
+    
+    setView('DASHBOARD');
   };
 
   if (loading) {
@@ -81,53 +129,59 @@ export default function App() {
           </div>
         )}
 
+        {view === 'ONBOARDING' && (
+          <div key="onboarding_wrapper">
+            <Onboarding onComplete={handleOnboardingComplete} />
+          </div>
+        )}
+
         {view === 'DASHBOARD' && (
           <motion.div
             key="dashboard"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             className="max-w-md mx-auto px-6 py-12 space-y-12"
           >
             <div className="flex justify-between items-start">
               <div>
-                <h1 className="text-3xl font-serif italic text-slate-800">Eixo</h1>
-                <p className="text-slate-500 mt-1">Bem-vindo(a), {user?.name?.split(' ')[0]}</p>
+                <h1 className="text-4xl font-serif italic text-slate-950">Eixo</h1>
+                <p className="text-slate-400 font-medium mt-1">Olá, {user?.name?.split(' ')[0]}</p>
               </div>
               <button 
                 onClick={handleLogout}
-                className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                className="p-3 bg-white border border-slate-100 rounded-2xl shadow-sm text-slate-400 hover:text-slate-600 transition-all hover:border-slate-200"
                 id="logout-btn"
               >
-                <LogOut className="w-5 h-5 text-slate-400" />
+                <LogOut className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="bg-indigo-600 rounded-3xl p-8 text-white shadow-xl shadow-indigo-100 relative overflow-hidden group">
-              <div className="relative z-10 space-y-6">
-                <h2 className="text-2xl font-medium leading-tight">Como está sua mente agora?</h2>
+            <div className="bg-indigo-600 rounded-[2.5rem] p-10 text-white shadow-2xl shadow-indigo-100 relative overflow-hidden group">
+              <div className="relative z-10 space-y-8">
+                <div className="space-y-4">
+                  <h2 className="text-3xl font-serif italic leading-tight">Como está sua<br/>mente agora?</h2>
+                  <p className="text-indigo-100 text-sm leading-relaxed max-w-[200px]">Uma pequena pausa pode mudar todo o seu dia.</p>
+                </div>
                 <button
                   onClick={() => setView('CHECK_IN')}
-                  className="bg-white text-indigo-600 px-6 py-3 rounded-full flex items-center gap-2 font-medium hover:bg-indigo-50 transition-colors w-fit"
+                  className="bg-white text-indigo-600 px-8 py-4 rounded-2xl flex items-center gap-3 font-bold hover:bg-slate-50 transition-all shadow-lg active:scale-95"
                   id="start-checkin-btn"
                 >
                   Iniciar Recomposição
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className="w-5 h-5" />
                 </button>
               </div>
               <motion.div 
-                className="absolute -right-8 -bottom-8 opacity-20 pointer-events-none"
+                className="absolute -right-12 -bottom-12 opacity-10 pointer-events-none"
                 animate={{ rotate: 360 }}
-                transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+                transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
               >
-                <Sparkles className="w-48 h-48" />
+                <Sparkles className="w-64 h-64" />
               </motion.div>
             </div>
 
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h3 className="font-medium text-slate-700">Explorar</h3>
-              </div>
+            <div className="space-y-8">
+              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] px-2 text-center">Explorar</h3>
               <div className="grid grid-cols-2 gap-4">
                 <Card 
                   id="premium-card"
@@ -139,26 +193,28 @@ export default function App() {
                 <Card 
                   id="history-card"
                   icon={<History className="w-5 h-5 text-emerald-500" />}
-                  title="Histórico"
-                  desc="Sua jornada"
-                  onClick={() => setView('HISTORY')}
+                  title="Jornada"
+                  desc="Seu progresso"
+                  onClick={() => setView('PROGRESS')}
                 />
               </div>
             </div>
 
-            <div className="pt-8 border-t border-slate-100">
-              <p className="text-xs text-center text-slate-400 uppercase tracking-widest font-medium">Recomposição Coerente</p>
-            </div>
+            <footer className="pt-12 text-center space-y-4">
+               <p className="text-[10px] text-slate-300 uppercase tracking-[0.4em] font-medium">Recomposição Coerente</p>
+               <div className="flex justify-center gap-6">
+                 <div className="w-1.5 h-1.5 bg-slate-100 rounded-full"></div>
+                 <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></div>
+                 <div className="w-1.5 h-1.5 bg-slate-100 rounded-full"></div>
+               </div>
+            </footer>
           </motion.div>
         )}
 
         {view === 'CHECK_IN' && (
           <div key="checkin_wrapper">
             <CheckIn 
-              onComplete={(mood, intensity) => {
-                setCurrentSession({ mood, intensity });
-                setView('INTERVENTION');
-              }}
+              onComplete={handleCheckInComplete}
               onCancel={() => setView('DASHBOARD')}
             />
           </div>
@@ -168,8 +224,16 @@ export default function App() {
           <div key="intervention_wrapper">
             <InterventionView 
               session={currentSession}
-              onComplete={() => setView('DASHBOARD')}
+              onComplete={handleInterventionComplete}
               onCancel={() => setView('DASHBOARD')}
+            />
+          </div>
+        )}
+
+        {view === 'FEEDBACK' && (
+          <div key="feedback_wrapper">
+            <FeedbackView 
+              onComplete={handleFeedbackComplete}
             />
           </div>
         )}
@@ -183,9 +247,9 @@ export default function App() {
           </div>
         )}
 
-        {view === 'HISTORY' && (
-          <div key="history_wrapper">
-            <HistoryView 
+        {view === 'PROGRESS' && (
+          <div key="progress_wrapper">
+            <ProgressView 
               onBack={() => setView('DASHBOARD')}
             />
           </div>
@@ -200,56 +264,15 @@ function Card({ icon, title, desc, onClick, id }: { icon: React.ReactNode, title
     <button 
       id={id}
       onClick={onClick}
-      className="bg-white p-6 rounded-2xl border border-slate-100 flex flex-col gap-4 text-left hover:border-indigo-200 transition-all hover:shadow-sm"
+      className="bg-white p-6 rounded-[2rem] border border-slate-100 flex flex-col gap-4 text-left hover:border-indigo-100 transition-all hover:shadow-lg active:scale-95 group"
     >
-      <div className="p-2 bg-slate-50 w-fit rounded-xl">
+      <div className="p-3 bg-slate-50 w-fit rounded-2xl group-hover:bg-indigo-50 transition-colors">
         {icon}
       </div>
       <div>
-        <div className="font-medium">{title}</div>
-        <div className="text-xs text-slate-400">{desc}</div>
+        <div className="font-bold text-slate-800">{title}</div>
+        <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{desc}</div>
       </div>
     </button>
-  );
-}
-
-function HistoryView({ onBack }: { onBack: () => void }) {
-  const [sessions, setSessions] = useState<Session[]>([]);
-
-  useEffect(() => {
-    api.get('/sessions/history').then(res => setSessions(res.data));
-  }, []);
-
-  return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="max-w-md mx-auto px-6 py-12 space-y-8"
-    >
-      <header className="flex items-center gap-4">
-        <button onClick={onBack} className="p-2 hover:bg-slate-100 rounded-full">
-          <ArrowRight className="w-5 h-5 rotate-180" />
-        </button>
-        <h1 className="text-2xl font-serif italic">Seu Histórico</h1>
-      </header>
-
-      <div className="space-y-4">
-        {sessions.length === 0 ? (
-          <p className="text-slate-400 text-center py-20">Nenhuma sessão registrada ainda.</p>
-        ) : (
-          sessions.map(s => (
-            <div key={s.id} className="p-4 bg-white border border-slate-100 rounded-2xl flex justify-between items-center">
-              <div>
-                <p className="font-medium capitalize">{s.mood}</p>
-                <p className="text-xs text-slate-400">{new Date(s.created_at).toLocaleDateString()} • Intensidade {s.intensity}/10</p>
-              </div>
-              <div className="bg-emerald-50 text-emerald-600 p-2 rounded-full">
-                <CheckCircle2 className="w-4 h-4" />
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-    </motion.div>
   );
 }

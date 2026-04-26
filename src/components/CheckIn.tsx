@@ -11,24 +11,25 @@ import {
   CheckCircle2,
   Heart
 } from 'lucide-react';
-import { Mood } from '../types';
+import { MoodType } from '../types';
 
 interface CheckInProps {
-  onComplete: (mood: Mood, intensity: number) => void;
+  onComplete: (mood: MoodType, intensity: number) => void;
   onCancel: () => void;
 }
 
-const MOODS: { type: Mood; label: string; icon: any; color: string }[] = [
-  { type: 'calm', label: 'Calmo', icon: Wind, color: 'text-emerald-500' },
-  { type: 'anxious', label: 'Ansioso', icon: Zap, color: 'text-amber-500' },
-  { type: 'sad', label: 'Triste', icon: Frown, color: 'text-blue-500' },
-  { type: 'energetic', label: 'Eufórico', icon: Smile, color: 'text-orange-500' },
-  { type: 'tired', label: 'Exausto', icon: Moon, color: 'text-indigo-500' },
+const MOODS: { type: MoodType; label: string; icon: any; color: string }[] = [
+  { type: 'acelerado', label: 'Acelerado', icon: Zap, color: 'text-amber-500' },
+  { type: 'sobrecarregado', label: 'Sobrecarregado', icon: Heart, color: 'text-rose-500' },
+  { type: 'travado', label: 'Travado', icon: Moon, color: 'text-indigo-500' },
+  { type: 'inseguro', label: 'Inseguro', icon: Frown, color: 'text-blue-500' },
+  { type: 'desligar', label: 'Difícil Desligar', icon: Wind, color: 'text-emerald-500' },
+  { type: 'calmo', label: 'Calmo', icon: Smile, color: 'text-green-500' },
 ];
 
 export default function CheckIn({ onComplete, onCancel }: CheckInProps) {
   const [step, setStep] = useState(1);
-  const [mood, setMood] = useState<Mood | null>(null);
+  const [mood, setMood] = useState<MoodType | null>(null);
   const [intensity, setIntensity] = useState(5);
 
   const handleNext = () => {

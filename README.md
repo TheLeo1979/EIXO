@@ -1,32 +1,25 @@
-# Eixo — Recomposição Coerente (MVP)
+# Eixo — Recomposição Coerente
 
-O **Eixo** é uma ferramenta de intervenção emocional imediata. Este MVP foca na estabilidade técnica e segurança da autenticação por e-mail.
+O **Eixo** não é mais um app de meditação passiva. É uma ferramenta de intervenção tática para o sistema nervoso.
 
-## 🔐 Segurança e Configuração
+## 🧘 O que é o Eixo?
+Projetado para quem vive sob alta carga mental, o Eixo oferece recomposição imediata através de técnicas de respiração, sons binaurais e práticas de ancoragem (grounding).
 
-Para que o aplicativo funcione, você **PRECISA** configurar o segredo do JWT.
+## 🔑 Configuração Inicial (Mandatório)
+Para rodar o applet com segurança, você deve configurar o segredo do JWT.
 
-### Variáveis Obrigatórias
-| Variável | Descrição | Onde Configurar |
-| :--- | :--- | :--- |
-| `JWT_SECRET` | Chave privada para assinar tokens. | **Settings > Secrets** (AI Studio) |
+1. Vá em **Settings > Secrets**.
+2. Adicione `JWT_SECRET` com uma chave segura.
+3. Reinicie o servidor se necessário.
 
-### Variáveis Opcionais (Stub/Fundação)
-As variáveis abaixo não são obrigatórias para o funcionamento básico:
-- `MERCADO_PAGO_ACCESS_TOKEN`: Para pagamentos reais.
-- `SPOTIFY_CLIENT_ID`: Para metadados oficiais de trilhas.
-- `SPOTIFY_CLIENT_SECRET`: Para metadados oficiais de trilhas.
+## 🌟 Diferenciais deste MVP
+- **Listen First**: O app pergunta como você está antes de sugerir qualquer coisa.
+- **Immediate Action**: Intervenções curtas e eficazes (4-10 min).
+- **Offline Ready**: Persistência local robusta para sua jornada.
+- **Privacy Focused**: Você escolhe se quer criar conta ou usar como visitante.
 
-## 🚀 Como Testar
-1. Acesse o menu **Settings > Secrets** no AI Studio.
-2. Adicione `JWT_SECRET` com um valor aleatório.
-3. Utilize o login por e-mail. **Sua conta será criada automaticamente no primeiro acesso.**
-
-## 📍 Status do MVP Atual
-- ✅ Login/Cadastro simplificado por e-mail e senha.
-- ✅ Autenticação via JWT (Segurança reforçada).
-- ✅ Persistência em SQLite (Usuários e Sessões).
-- ✅ Intervenção de Respiração Quadrada.
-- ✅ Histórico de sessões funcional.
-- ⚠️ Google Login: **Suspenso nesta versão.**
-- 💡 Mercado Pago/Spotify: Integrados como fundação opcional.
+## 🔧 Estrutura Técnica
+- **Autenticação**: JWT (JSON Web Tokens).
+- **Banco de Dados**: SQLite via `better-sqlite3`.
+- **Animações**: `motion/react` para biofeedback visual.
+- **Design**: Craftsmanship-focused Tailwind UI.

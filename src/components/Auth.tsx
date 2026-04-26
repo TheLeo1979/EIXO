@@ -29,29 +29,40 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
     }
   };
 
+  const handleGuestMode = () => {
+    onAuthSuccess({
+      id: -1,
+      email: 'visitante@eixo.app',
+      name: 'Visitante',
+      is_premium: false
+    }, 'guest-token');
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#FDFCFB] px-6">
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-sm space-y-8"
       >
-        <div className="text-center space-y-3">
+        <div className="text-center space-y-4">
           <motion.div 
-            className="w-16 h-16 bg-indigo-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-indigo-100"
-            whileHover={{ rotate: 10 }}
+            className="w-20 h-20 bg-indigo-600 rounded-3xl flex items-center justify-center mx-auto shadow-xl shadow-indigo-100"
+            whileHover={{ rotate: 5, scale: 1.05 }}
           >
-            <Sparkles className="w-8 h-8 text-white" />
+            <Sparkles className="w-10 h-10 text-white" />
           </motion.div>
-          <h1 className="text-3xl font-serif italic">Eixo</h1>
-          <p className="text-slate-500 text-sm">Respire. Recomponha seu centro.</p>
+          <div className="space-y-1">
+            <h1 className="text-4xl font-serif italic text-slate-900">Eixo</h1>
+            <p className="text-slate-500 font-medium italic">Recomposição Coerente</p>
+          </div>
         </div>
 
-        <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 space-y-6">
-          <div className="text-center">
+        <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-2xl shadow-slate-200/50 space-y-6">
+          <div className="text-left space-y-2">
             <h2 className="text-xl font-medium text-slate-800">Entrar com e-mail</h2>
-            <p className="text-xs text-slate-400 mt-2">
-              Se for seu primeiro acesso, sua conta será criada automaticamente.
+            <p className="text-xs text-slate-400">
+              Seu refúgio emocional está a um passo.
             </p>
           </div>
 
@@ -69,28 +80,41 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
               id="password-input"
               icon={<Lock className="w-4 h-4" />}
               type="password"
-              placeholder="Sua senha"
+              placeholder="Senha"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
 
-            {error && <p className="text-rose-500 text-xs text-center">{error}</p>}
+            {error && <p className="text-rose-500 text-[10px] text-center font-medium bg-rose-50 py-2 rounded-lg">{error}</p>}
 
             <button
               id="auth-submit-btn"
               type="submit"
               disabled={loading}
-              className="w-full bg-slate-900 text-white py-3 rounded-xl font-medium hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 group disabled:opacity-50"
+              className="w-full bg-slate-900 text-white py-4 rounded-2xl font-semibold hover:bg-slate-800 transition-all flex items-center justify-center gap-2 group disabled:opacity-50"
             >
-              {loading ? 'Processando...' : 'Acessar Eixo'}
+              {loading ? 'Sincronizando...' : 'Entrar no Eixo'}
               {!loading && <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />}
             </button>
           </form>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100"></div></div>
+            <div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-2 text-slate-300 tracking-widest">ou</span></div>
+          </div>
+
+          <button
+            onClick={handleGuestMode}
+            className="w-full py-3 text-slate-500 text-sm font-medium hover:text-slate-700 transition-colors"
+          >
+            Acessar como visitante
+          </button>
         </div>
 
-        <p className="text-center text-xs text-slate-400 px-8 leading-relaxed">
-          O Google Login está temporariamente desativado nesta versão MVP.
+        <p className="text-center text-[10px] text-slate-400 px-10 leading-relaxed">
+          Conta criada automaticamente no primeiro acesso. <br/>
+          Google Login suspenso no MVP.
         </p>
       </motion.div>
     </div>

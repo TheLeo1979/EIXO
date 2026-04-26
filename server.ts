@@ -8,7 +8,6 @@ import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import bodyParser from 'body-parser';
-import { OAuth2Client } from 'google-auth-library';
 import Mercadopago from 'mercadopago';
 import SpotifyWebApi from 'spotify-web-api-node';
 
@@ -43,9 +42,12 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS sessions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,
-    mood TEXT,
-    intensity INTEGER,
-    intervention_type TEXT,
+    moodBefore TEXT,
+    intensityBefore INTEGER,
+    moodAfter TEXT,
+    intensityAfter INTEGER,
+    feedback TEXT,
+    interventionId TEXT,
     completed BOOLEAN DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(user_id) REFERENCES users(id)
@@ -117,8 +119,11 @@ app.get('/api/config/status', (req, res) => {
 
 // Sessions
 app.post('/api/sessions', authenticateToken, (req: any, res) => {
-  const { mood, intensity, intervention_type } = req.body;
-  const info = db.prepare('INSERT INTO sessions (user_id, mood, intensity, intervention_type) VALUES (?, ?, ?, ?)').run(req.user.id, mood, intensity, intervention_type);
+  const { moodBefore, intensityBefore, moodAfter, intensityAfter, feedback, interventionId, completed } = req.body;
+  const info = db.prepare(`
+    INSERT INTO sessions (user_id, moodBefore, intensityBefore, moodAfter, intensityAfter, feedback, interventionId, completed) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(req.user.id, moodBefore, intensityBefore, moodAfter, intensityAfter, feedback, interventionId, completed ? 1 : 0);
   res.json({ id: info.lastInsertRowid });
 });
 
