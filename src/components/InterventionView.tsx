@@ -15,6 +15,7 @@ export default function InterventionView({ session, onComplete, onCancel }: Inte
   const [stage, setStage] = useState<'PREPARING' | 'ACTIVE' | 'FINISHED'>('PREPARING');
   const [breathingStep, setBreathingStep] = useState(0); 
   const [cycles, setCycles] = useState(0);
+  const [audioError, setAudioError] = useState(false);
 
   const intervention = INTERVENTIONS.find(i => i.id === session.interventionId) || INTERVENTIONS[0];
 
@@ -27,11 +28,20 @@ export default function InterventionView({ session, onComplete, onCancel }: Inte
     }
     
     if (stage === 'ACTIVE' && intervention.type === 'audio') {
-      const audio = new Audio(intervention.id === 'ambient-focus' 
+      const audioPath = intervention.id === 'ambient-focus' 
         ? '/audio/ambient-focus.mp3' 
-        : '/audio/night-unwind.mp3'
-      );
-      audio.play().catch(e => console.warn('Audio playback prevented by browser', e));
+        : '/audio/night-unwind.mp3';
+
+      const audio = new Audio(audioPath);
+      
+      audio.play().catch(e => {
+        console.warn('Audio playback prevented or file missing:', e);
+        setAudioError(true);
+      });
+      
+      audio.addEventListener('error', () => {
+        setAudioError(true);
+      });
       
       return () => {
         audio.pause();
@@ -158,6 +168,11 @@ export default function InterventionView({ session, onComplete, onCancel }: Inte
                    <Sparkles className="w-16 h-16 text-indigo-400 mx-auto animate-pulse" />
                 </div>
                 <h2 className="text-2xl font-serif italic">Prática em andamento...</h2>
+                {audioError && (
+                  <p className="text-amber-400/80 text-[10px] uppercase tracking-widest font-bold">
+                    Áudio indisponível neste ambiente. Você ainda pode concluir a prática manualmente.
+                  </p>
+                )}
                 <p className="text-slate-400 text-sm leading-relaxed">Mantenha o foco. Deixe que a experiência guie você de volta ao centro.</p>
                 <button 
                   onClick={() => setStage('FINISHED')}
