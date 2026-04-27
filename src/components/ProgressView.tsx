@@ -13,11 +13,20 @@ export default function ProgressView({ onBack }: ProgressViewProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Sincroniza o histórico (pode vir do SQLite + LocalStorage no futuro)
-    api.get('/sessions/history').then(res => {
-      setHistory(res.data);
+    const token = localStorage.getItem('eixo_token');
+    
+    if (token === 'guest-token') {
+      const guestHistory = JSON.parse(localStorage.getItem('eixo_guest_history') || '[]');
+      setHistory(guestHistory);
       setLoading(false);
-    }).catch(() => setLoading(false));
+    } else {
+      api.get('/sessions/history')
+        .then(res => {
+          setHistory(res.data);
+          setLoading(false);
+        })
+        .catch(() => setLoading(false));
+    }
   }, []);
 
   const totalSessions = history.length;

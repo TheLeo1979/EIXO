@@ -26,14 +26,27 @@ export default function InterventionView({ session, onComplete, onCancel }: Inte
       return () => clearInterval(timer);
     }
     
-    // Auto-finish non-interactive sessions after some time
-    if (stage === 'ACTIVE' && intervention.type !== 'breathing') {
+    if (stage === 'ACTIVE' && intervention.type === 'audio') {
+      const audio = new Audio(intervention.id === 'ambient-focus' 
+        ? 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' 
+        : 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'
+      );
+      audio.play().catch(e => console.warn('Audio playback prevented by browser', e));
+      
+      return () => {
+        audio.pause();
+        audio.src = '';
+      };
+    }
+
+    // Auto-finish non-interactive text sessions after some time
+    if (stage === 'ACTIVE' && intervention.type === 'text') {
       const timer = setTimeout(() => {
         setStage('FINISHED');
-      }, 5000); // Simulate completion for text/audio for now
+      }, 5000); 
       return () => clearTimeout(timer);
     }
-  }, [stage, intervention.type]);
+  }, [stage, intervention.type, intervention.id]);
 
   useEffect(() => {
     if (breathingStep === 0 && stage === 'ACTIVE' && intervention.type === 'breathing') {

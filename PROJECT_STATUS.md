@@ -6,7 +6,7 @@ O **Eixo** é uma ferramenta de intervenção para regulação do sistema nervos
 ## 🚀 Funcionalidades Ativas
 - **Autenticação Segura**: Login por e-mail/senha via JWT com expiração de 7 dias.
 - **Assinaturas Mercado Pago**: Integração real para ativação do plano Eixo Pleno.
-- **Webhook de Pagamento**: Atualização automática de status premium via eventos do Mercado Pago.
+- **Webhook de Pagamento**: Atualização automática de status premium via eventos do Mercado Pago com validação de segurança X-Signature.
 - **Mapeamento Emocional**: Estados centrais (`acelerado`, `sobrecarregado`, `travado`, `inseguro`, `sem conseguir desligar`).
 - **Intervenções Guiadas**: Práticas de respiração, foco e relaxamento noturno.
 - **Histórico Persistente**: Persistência SQLite para usuários registrados.
@@ -17,6 +17,5 @@ O **Eixo** é uma ferramenta de intervenção para regulação do sistema nervos
 - **Frontend**: React + Framer Motion para biofeedback visual.
 
 ## ⚠️ Próximos Passos
-- [ ] Implementação de validação X-Signature nos Webhooks.
 - [ ] Adição de mais intervenções de áudio e integração com Spotify.
 - [ ] Preparação para build mobile nativo.

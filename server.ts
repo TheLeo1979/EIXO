@@ -9,6 +9,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import axios from 'axios';
+import crypto from 'crypto';
 import Mercadopago from 'mercadopago';
 import SpotifyWebApi from 'spotify-web-api-node';
 
@@ -92,6 +93,10 @@ const authenticateToken = (req: any, res: any, next: any) => {
 };
 
 // API Routes
+app.get('/api/health', (req, res) => {
+  res.json({ ok: true, service: 'eixo-api', timestamp: new Date().toISOString() });
+});
+
 app.post('/api/auth/login', async (req, res) => {
   const { email, password, name } = req.body;
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
@@ -234,8 +239,54 @@ app.post('/api/webhooks/mercadopago', async (req, res) => {
   const mpToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
 
   console.log('MP Webhook Received:', { action, type, id: data?.id });
+  
+  // Validation of X-Signature for production safety
+  const webhookSecret = process.env.MERCADO_PAGO_WEBHOOK_SECRET;
+  if (webhookSecret) {
+    const xSignature = req.headers['x-signature'] as string;
+    const xRequestId = req.headers['x-request-id'] as string;
+    
+    if (!xSignature || !xRequestId) {
+      console.warn('Webhook rejected: Missing signature headers');
+      return res.status(401).json({ error: 'Missing signature headers' });
+    }
 
-  // Note: Validation of X-Signature should be added here for production safety.
+    try {
+      const parts = xSignature.split(',');
+      const params: Record<string, string> = {};
+      parts.forEach(p => {
+        const [key, val] = p.split('=');
+        if (key && val) params[key.trim()] = val.trim();
+      });
+
+      const ts = params['ts'];
+      const receivedHash = params['v1'];
+      
+      if (!ts || !receivedHash) {
+        console.warn('Webhook rejected: Incomplete signature parameters');
+        return res.status(401).json({ error: 'Incomplete signature' });
+      }
+
+      // Construction of validation manifest
+      const manifest = `id:${data?.id};request-id:${xRequestId};ts:${ts};`;
+      const generatedHash = crypto
+        .createHmac('sha256', webhookSecret)
+        .update(manifest)
+        .digest('hex');
+
+      if (generatedHash !== receivedHash) {
+        console.warn('Webhook rejected: Signature mismatch');
+        return res.status(401).json({ error: 'Invalid signature' });
+      }
+      
+      console.log('Webhook signature verified successfully');
+    } catch (e: any) {
+      console.error('Signature validation error:', e.message);
+      return res.status(400).json({ error: 'Signature validation failed' });
+    }
+  } else {
+    console.warn('⚠️ Webhook received but X-Signature validation was skipped (MERCADO_PAGO_WEBHOOK_SECRET not configured)');
+  }
   
   if ((type === 'subscription' || type === 'preapproval')) {
     if (!data?.id) {

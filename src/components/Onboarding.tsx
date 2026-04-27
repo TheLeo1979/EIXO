@@ -24,6 +24,12 @@ const STEPS = [
     desc: 'Intervenções táticas guiadas para trazer você de volta ao centro.',
     icon: Wind,
     color: 'bg-emerald-500'
+  },
+  {
+    title: 'Segurança Importante',
+    desc: 'O Eixo oferece práticas de autorregulação. Não substitui atendimento médico ou psicológico. Em crises, procure ajuda profissional.',
+    icon: Moon,
+    color: 'bg-indigo-900'
   }
 ];
 

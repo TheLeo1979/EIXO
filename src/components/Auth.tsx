@@ -112,9 +112,13 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
           </button>
         </div>
 
-        <p className="text-center text-[10px] text-slate-400 px-10 leading-relaxed">
-          Conta criada automaticamente no primeiro acesso. <br/>
-          Google Login suspenso no MVP.
+        <p className="text-center text-[10px] text-slate-400 px-10 leading-relaxed uppercase tracking-wider font-bold">
+          Conta criada no primeiro acesso. <br/>
+          Guarde sua senha para futuros logins.
+        </p>
+
+        <p className="text-center text-[9px] text-slate-300 px-8 leading-normal italic">
+          O Eixo é uma ferramenta de autorregulação e não substitui qualquer forma de terapia ou atendimento especializado.
         </p>
       </motion.div>
     </div>

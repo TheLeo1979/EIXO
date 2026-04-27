@@ -100,7 +100,7 @@ export default function PremiumDetails({ user, onBack }: PremiumDetailsProps) {
               )}
 
               {loading ? (
-                <div className="w-full py-4 text-center text-slate-300 text-sm font-medium">Verificando assunatura...</div>
+                <div className="w-full py-4 text-center text-slate-300 text-sm font-medium">Verificando assinatura...</div>
               ) : statusDisplay ? (
                 <div className={`w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2 ${statusDisplay.color}`}>
                   {statusDisplay.icon}

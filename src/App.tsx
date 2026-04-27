@@ -41,12 +41,33 @@ export default function App() {
   }, []);
 
   const checkAuth = async () => {
+    const token = localStorage.getItem('eixo_token');
+    
+    if (!token) {
+      setLoading(false);
+      setView('AUTH');
+      return;
+    }
+
+    if (token === 'guest-token') {
+      setUser({
+        id: -1,
+        email: 'visitante@eixo.app',
+        name: 'Visitante',
+        is_premium: false
+      });
+      setView('DASHBOARD');
+      setLoading(false);
+      return;
+    }
+
     try {
       const { data } = await api.get('/me');
       setUser(data);
       const isOnboarded = localStorage.getItem(`eixo_onboarded_${data.id}`);
       setView(isOnboarded ? 'DASHBOARD' : 'ONBOARDING');
     } catch (e) {
+      localStorage.removeItem('eixo_token');
       setUser(null);
       setView('AUTH');
     } finally {
@@ -66,6 +87,22 @@ export default function App() {
   };
 
   const handleCheckInComplete = (mood: MoodType, intensity: number) => {
+    // Check for daily limit if not premium
+    if (!user?.is_premium) {
+      const historyKey = user.id === -1 ? 'eixo_guest_history' : `eixo_history_${user.id}`;
+      const history = JSON.parse(localStorage.getItem(historyKey) || '[]');
+      const sessionsToday = history.filter((s: any) => {
+        const date = new Date(s.created_at || s.date);
+        return date.toDateString() === new Date().toDateString();
+      });
+
+      if (sessionsToday.length >= 1) {
+        alert('Limite diário atingido. Assine o Plano Pleno para sessões ilimitadas e histórico na nuvem.');
+        setView('PREMIUM');
+        return;
+      }
+    }
+
     const recommendedInterventions = MOOD_MAPPING[mood] || ['box-breathing'];
     setCurrentSession({
       moodBefore: mood,
@@ -98,6 +135,7 @@ export default function App() {
       }
     } catch (e) {
       console.error('Failed to sync session');
+      alert('Sessão registrada localmente, mas não conseguimos sincronizar com a nuvem agora.');
     }
     
     setView('DASHBOARD');
@@ -200,8 +238,16 @@ export default function App() {
               </div>
             </div>
 
-            <footer className="pt-12 text-center space-y-4">
-               <p className="text-[10px] text-slate-300 uppercase tracking-[0.4em] font-medium">Recomposição Coerente</p>
+            <footer className="pt-12 text-center space-y-6">
+               <div className="space-y-2">
+                 <p className="text-[10px] text-slate-400 leading-relaxed max-w-[280px] mx-auto italic">
+                   O Eixo oferece práticas breves de autorregulação emocional. Não substitui atendimento médico, psicológico ou emergencial.
+                 </p>
+                 <div className="flex justify-center gap-4 text-[9px] font-bold uppercase tracking-widest text-slate-300">
+                    <button className="hover:text-slate-500 transition-colors">Termos</button>
+                    <button className="hover:text-slate-500 transition-colors">Privacidade</button>
+                 </div>
+               </div>
                <div className="flex justify-center gap-6">
                  <div className="w-1.5 h-1.5 bg-slate-100 rounded-full"></div>
                  <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full"></div>
