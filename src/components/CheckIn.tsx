@@ -64,51 +64,87 @@ export default function CheckIn({ onComplete, onCancel }: CheckInProps) {
           {step === 1 ? (
             <motion.div 
               key="step1"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: { staggerChildren: 0.05 }
+                },
+                exit: { opacity: 0, x: -20, transition: { duration: 0.2 } }
+              }}
               className="grid grid-cols-2 gap-4"
             >
               {MOODS.map((m) => (
-                <button
+                <motion.button
                   key={m.type}
+                  variants={{
+                    hidden: { opacity: 0, y: 10 },
+                    visible: { opacity: 1, y: 0 }
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   id={`mood-${m.type}`}
                   onClick={() => setMood(m.type)}
-                  className={`p-6 rounded-3xl border-2 transition-all flex flex-col items-center gap-4 ${
+                  className={`relative p-6 rounded-[2.5rem] border-2 transition-all duration-300 flex flex-col items-center gap-4 group ${
                     mood === m.type 
-                    ? 'border-indigo-600 bg-indigo-50/50' 
+                    ? 'border-indigo-600 bg-indigo-50/50 shadow-xl shadow-indigo-100/50 scale-[1.03]' 
                     : 'border-slate-100 hover:border-slate-200 bg-white'
                   }`}
                 >
-                  <m.icon className={`w-8 h-8 ${m.color}`} />
-                  <span className="font-medium text-sm text-slate-700">{m.label}</span>
-                </button>
+                  {mood === m.type && (
+                    <motion.div 
+                      layoutId="mood-glow"
+                      className="absolute inset-0 bg-indigo-500/5 blur-2xl rounded-full"
+                    />
+                  )}
+                  <div className={`p-4 rounded-2xl transition-colors ${mood === m.type ? 'bg-white' : 'bg-slate-50 group-hover:bg-indigo-50'}`}>
+                    <m.icon className={`w-8 h-8 ${m.color} transition-transform duration-500 ${mood === m.type ? 'scale-110' : 'group-hover:scale-110'}`} />
+                  </div>
+                  <span className={`font-bold text-sm transition-colors ${mood === m.type ? 'text-indigo-600' : 'text-slate-600'}`}>
+                    {m.label}
+                  </span>
+                </motion.button>
               ))}
             </motion.div>
           ) : (
             <motion.div 
               key="step2"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-12 py-8"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.05 }}
+              className="space-y-12 py-10"
             >
-              <div className="text-center">
-                <span className="text-7xl font-serif italic text-indigo-600">{intensity}</span>
+              <div className="text-center relative">
+                <motion.div 
+                  key={intensity}
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="text-8xl font-serif italic text-indigo-600 drop-shadow-sm"
+                >
+                  {intensity}
+                </motion.div>
+                <div className="absolute -inset-4 bg-indigo-50 blur-3xl rounded-full -z-10 opacity-50" />
               </div>
-              <input 
-                id="intensity-slider"
-                type="range"
-                min="1"
-                max="10"
-                value={intensity}
-                onChange={(e) => setIntensity(parseInt(e.target.value))}
-                className="w-full h-2 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
-              />
-              <div className="flex justify-between text-xs font-medium text-slate-400 uppercase tracking-widest px-1">
-                <span>Leve</span>
-                <span>Moderado</span>
-                <span>Forte</span>
+              
+              <div className="px-2">
+                <input 
+                  id="intensity-slider"
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={intensity}
+                  onChange={(e) => setIntensity(parseInt(e.target.value))}
+                  className="w-full h-3 bg-slate-100 rounded-full appearance-none cursor-pointer accent-indigo-600 outline-none"
+                />
+              </div>
+
+              <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] px-4">
+                <span className={intensity <= 3 ? 'text-indigo-600' : ''}>Leve</span>
+                <span className={intensity > 3 && intensity <= 7 ? 'text-indigo-600' : ''}>Moderado</span>
+                <span className={intensity > 7 ? 'text-indigo-600' : ''}>Forte</span>
               </div>
             </motion.div>
           )}

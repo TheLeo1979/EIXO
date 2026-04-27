@@ -107,13 +107,26 @@ export default function PremiumDetails({ user, onBack }: PremiumDetailsProps) {
                   {statusDisplay.label}
                 </div>
               ) : (
-                <button
+                <motion.button
                   id="subscribe-btn"
                   onClick={handleSubscribe}
-                  className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-lg active:scale-95"
+                  whileHover={{ scale: 1.01, backgroundColor: '#1e293b' }}
+                  whileTap={{ scale: 0.98 }}
+                  animate={{ 
+                    y: [0, -2, 0],
+                  }}
+                  transition={{ 
+                    y: {
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }
+                  }}
+                  className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold shadow-xl shadow-slate-200/50 flex items-center justify-center gap-2"
                 >
                   Assinar agora
-                </button>
+                  <Sparkles className="w-4 h-4 text-indigo-300" />
+                </motion.button>
               )}
             </div>
           </div>
