@@ -68,10 +68,10 @@ db.exec(`
 // Services Initialization
 // Spotify - Flexible initialization
 let spotifyApi: SpotifyWebApi | null = null;
-const hasSpotifyConfig = process.env.SPOTIFY_CLIENT_ID && 
+const hasSpotifyConfig = !!(process.env.SPOTIFY_CLIENT_ID && 
                         process.env.SPOTIFY_CLIENT_ID !== 'YOUR_SPOTIFY_CLIENT_ID' &&
                         process.env.SPOTIFY_CLIENT_SECRET &&
-                        process.env.SPOTIFY_CLIENT_SECRET !== 'YOUR_SPOTIFY_CLIENT_SECRET';
+                        process.env.SPOTIFY_CLIENT_SECRET !== 'YOUR_SPOTIFY_CLIENT_SECRET');
 
 if (hasSpotifyConfig) {
   spotifyApi = new SpotifyWebApi({
@@ -79,6 +79,10 @@ if (hasSpotifyConfig) {
     clientSecret: process.env.SPOTIFY_CLIENT_SECRET
   });
 }
+
+// Mercado Pago - Flexible configuration check
+const hasMercadoPagoConfig = !!(process.env.MERCADO_PAGO_ACCESS_TOKEN && 
+                             !['YOUR_MERCADO_PAGO_ACCESS_TOKEN', 'MERCADO_PAGO_ACCESS_TOKEN', 'mp_token_ainda_nao_configurado', ''].includes(process.env.MERCADO_PAGO_ACCESS_TOKEN));
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -136,8 +140,8 @@ app.get('/api/me', authenticateToken, (req: any, res) => {
 // Config Check Endpoint
 app.get('/api/config/status', (req, res) => {
   res.json({
-    mercadopago: !!process.env.MERCADO_PAGO_ACCESS_TOKEN,
-    spotify: !!(process.env.SPOTIFY_CLIENT_ID && process.env.SPOTIFY_CLIENT_SECRET)
+    mercadopago: hasMercadoPagoConfig,
+    spotify: hasSpotifyConfig
   });
 });
 
@@ -187,8 +191,8 @@ app.post('/api/create-subscription', authenticateToken, async (req: any, res) =>
   const token = process.env.MERCADO_PAGO_ACCESS_TOKEN;
   const appUrl = process.env.APP_URL || 'http://localhost:3000';
 
-  if (!token) {
-    return res.status(503).json({ error: 'Mercado Pago não configurado neste ambiente.' });
+  if (!hasMercadoPagoConfig) {
+    return res.status(503).json({ error: 'Mercado Pago ainda não configurado neste ambiente.' });
   }
 
   try {
@@ -298,8 +302,8 @@ app.post('/api/webhooks/mercadopago', async (req, res) => {
       return res.status(400).json({ error: 'Missing data.id for subscription event' });
     }
 
-    if (!mpToken) {
-      console.warn('MP token missing during webhook processing');
+    if (!hasMercadoPagoConfig) {
+      console.warn('MP token missing or placeholder during webhook processing');
       return res.status(503).json({ error: 'Mercado Pago token not configured' });
     }
 
