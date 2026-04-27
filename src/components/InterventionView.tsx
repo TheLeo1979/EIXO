@@ -4,6 +4,7 @@ import { Wind, Timer, CheckCircle, ArrowLeft, RefreshCcw, Sparkles, ExternalLink
 import api from '../services/api';
 import { Session, Intervention } from '../types';
 import { INTERVENTIONS } from '../data/sessions';
+import { getAudioPath, getAudioDuration } from '../lib/utils';
 
 interface InterventionViewProps {
   session: Partial<Session>;
@@ -28,9 +29,9 @@ export default function InterventionView({ session, onComplete, onCancel }: Inte
     }
     
     if (stage === 'ACTIVE' && intervention.type === 'audio') {
-      const audioPath = intervention.id === 'ambient-focus' 
-        ? '/audio/ambient-focus.mp3' 
-        : '/audio/night-unwind.mp3';
+      const mood = session.moodBefore || 'calmo';
+      const intensity = session.intensityBefore || 5;
+      const audioPath = getAudioPath(mood, intensity);
 
       const audio = new Audio(audioPath);
       
@@ -103,7 +104,9 @@ export default function InterventionView({ session, onComplete, onCancel }: Inte
               </div>
               <div className="inline-flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-full text-xs font-bold text-slate-500 uppercase tracking-widest">
                 <Timer className="w-3 link-3" />
-                {intervention.duration}
+                {intervention.id === 'dynamic-audio' 
+                  ? `${getAudioDuration(session.intensityBefore || 5)} min` 
+                  : intervention.duration}
               </div>
             </div>
             

@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import api from './services/api';
 import { User, Session, MoodType, Intervention } from './types';
-import { MOOD_MAPPING } from './data/sessions';
+import { MOOD_MAPPING, getRecommendedIntervention } from './data/sessions';
 
 // Components
 import Auth from './components/Auth';
@@ -119,11 +119,11 @@ export default function App() {
       }
     }
 
-    const recommendedInterventions = MOOD_MAPPING[mood] || ['box-breathing'];
+    const interventionId = getRecommendedIntervention(mood, intensity);
     setCurrentSession({
       moodBefore: mood,
       intensityBefore: intensity,
-      interventionId: recommendedInterventions[0]
+      interventionId
     });
     setView('INTERVENTION');
   };

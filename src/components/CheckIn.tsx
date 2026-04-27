@@ -25,6 +25,7 @@ const MOODS: { type: MoodType; label: string; icon: any; color: string }[] = [
   { type: 'inseguro', label: 'Inseguro', icon: Frown, color: 'text-blue-500' },
   { type: 'sem conseguir desligar', label: 'Difícil Desligar', icon: Wind, color: 'text-emerald-500' },
   { type: 'calmo', label: 'Calmo', icon: Smile, color: 'text-green-500' },
+  { type: 'cansado', label: 'Cansado', icon: Moon, color: 'text-slate-400' },
 ];
 
 export default function CheckIn({ onComplete, onCancel }: CheckInProps) {

@@ -32,15 +32,37 @@ export const INTERVENTIONS: Intervention[] = [
     type: 'audio',
     duration: '15 min',
     icon: 'Moon'
+  },
+  {
+    id: 'dynamic-audio',
+    title: 'Sessão Sonora Eixo',
+    description: 'Imersão sonora personalizada para o seu estado emocional e intensidade.',
+    type: 'audio',
+    duration: 'Var.',
+    icon: 'Focus'
   }
 ];
 
 export const MOOD_MAPPING: Record<MoodType, string[]> = {
-  'acelerado': ['box-breathing'],
-  'sobrecarregado': ['grounding-54321', 'box-breathing'],
-  'travado': ['ambient-focus'],
-  'inseguro': ['box-breathing'],
-  'sem conseguir desligar': ['night-unwind'],
-  'calmo': ['ambient-focus'],
-  'cansado': ['night-unwind']
+  'acelerado': ['box-breathing', 'dynamic-audio'],
+  'sobrecarregado': ['grounding-54321', 'dynamic-audio'],
+  'travado': ['dynamic-audio', 'ambient-focus'],
+  'inseguro': ['dynamic-audio', 'box-breathing'],
+  'sem conseguir desligar': ['dynamic-audio', 'night-unwind'],
+  'calmo': ['dynamic-audio', 'ambient-focus'],
+  'cansado': ['dynamic-audio', 'night-unwind']
 };
+
+export function getRecommendedIntervention(mood: MoodType, intensity: number): string {
+  const options = MOOD_MAPPING[mood] || ['box-breathing'];
+  
+  // Logic: For very high intensity in activation states, prioritize structural tools (breathing/grounding)
+  if (intensity >= 8) {
+    if (mood === 'acelerado' || mood === 'sobrecarregado') {
+      return options.find(id => id !== 'dynamic-audio') || options[0];
+    }
+  }
+  
+  // Default to the first option (which is often dynamic-audio)
+  return options[0];
+}
