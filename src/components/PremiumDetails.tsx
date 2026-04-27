@@ -10,23 +10,62 @@ interface PremiumDetailsProps {
 }
 
 export default function PremiumDetails({ user, onBack }: PremiumDetailsProps) {
-  const isPremium = user?.is_premium;
-  const [isMPConfigured, setIsMPConfigured] = useState(false);
+  const [subInfo, setSubInfo] = useState<{ status: string; subscription_id?: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
-    api.get('/config/status').then(res => {
-      setIsMPConfigured(res.data.mercadopago);
-    });
-  }, []);
-
-  const handleSubscribe = () => {
-    if (!isMPConfigured) {
-      alert('Pagamento ainda não configurado neste ambiente.');
+    if (!user || user.id === -1) {
+      setLoading(false);
       return;
     }
-    // In a real app, this would redirect to Mercado Pago Checkout
-    alert('Redirecionando para o Mercado Pago...');
+
+    api.get('/api/subscription-status')
+      .then(res => {
+        setSubInfo(res.data);
+        setLoading(false);
+      })
+      .catch(() => {
+        setErrorMsg('Erro ao carregar status da assinatura.');
+        setLoading(false);
+      });
+  }, [user]);
+
+  const handleSubscribe = async () => {
+    if (!user || user.id === -1) {
+      alert('Por favor, crie uma conta para assinar o Eixo Pleno.');
+      return;
+    }
+
+    try {
+      setErrorMsg('');
+      const res = await api.post('/api/create-subscription');
+      if (res.data.init_point) {
+        window.location.href = res.data.init_point;
+      }
+    } catch (e: any) {
+      const msg = e.response?.data?.error || 'Erro ao processar assinatura.';
+      setErrorMsg(msg);
+    }
   };
+
+  const getStatusDisplay = () => {
+    if (!subInfo) return null;
+    if (['inactive', 'cancelled', 'failed'].includes(subInfo.status)) return null;
+    
+    switch (subInfo.status) {
+      case 'authorized':
+        return { label: 'Assinatura Ativa', color: 'bg-emerald-50 text-emerald-600', icon: <Check className="w-5 h-5" /> };
+      case 'pending':
+        return { label: 'Pagamento em Análise', color: 'bg-amber-50 text-amber-600', icon: <Zap className="w-5 h-5 animate-pulse" /> };
+      case 'paused':
+        return { label: 'Assinatura Pausada', color: 'bg-slate-100 text-slate-500', icon: <ArrowLeft className="w-5 h-5" /> };
+      default:
+        return { label: `Status: ${subInfo.status}`, color: 'bg-rose-50 text-rose-600', icon: <Shield className="w-5 h-5" /> };
+    }
+  };
+
+  const statusDisplay = getStatusDisplay();
 
   return (
     <div className="min-h-screen bg-[#FDFCFB] px-6 py-12 flex flex-col">
@@ -38,50 +77,54 @@ export default function PremiumDetails({ user, onBack }: PremiumDetailsProps) {
           <h1 className="text-2xl font-serif italic">Eixo Premium</h1>
         </header>
 
-        <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-xl shadow-slate-200/40 relative overflow-hidden">
+        <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-2xl shadow-slate-200/20 relative overflow-hidden">
           <div className="relative z-10 space-y-8">
             <div className="space-y-2">
-              <span className="text-indigo-600 text-xs font-bold uppercase tracking-[0.2em]">Assinatura Mensal</span>
+              <span className="text-indigo-600 text-[10px] font-bold uppercase tracking-[0.3em]">Plano Eixo Pleno</span>
               <div className="flex items-baseline gap-1">
-                <span className="text-4xl font-serif italic">R$ 14,90</span>
-                <span className="text-slate-400">/mês</span>
+                <span className="text-4xl font-serif italic text-slate-900">R$ 14,90</span>
+                <span className="text-slate-400 font-medium">/mês</span>
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-5">
               <Feature icon={<Sparkles className="w-4 h-4 text-indigo-500" />} text="Intervenções Personalizadas Ilimitadas" />
-              <Feature icon={<Zap className="w-4 h-4 text-indigo-500" />} text="Eixo Dinâmico (IA-Powered)" />
-              <Feature icon={<Shield className="w-4 h-4 text-indigo-500" />} text="Histórico Completo na Nuvem" />
-              <Feature icon={<CreditCard className="w-4 h-4 text-indigo-500" />} text="Suporte Prioritário" />
+              <Feature icon={<Zap className="w-4 h-4 text-indigo-500" />} text="Histórico Completo na Nuvem" />
+              <Feature icon={<Shield className="w-4 h-4 text-indigo-500" />} text="Privacidade Restrita e Segura" />
+              <Feature icon={<CreditCard className="w-4 h-4 text-indigo-500" />} text="Suporte ao Desenvolvimento" />
             </div>
 
-            <button
-              id="subscribe-btn"
-              disabled={isPremium}
-              onClick={handleSubscribe}
-              className={`w-full py-4 rounded-2xl font-bold transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2 ${
-                isPremium 
-                ? 'bg-emerald-50 text-emerald-600 cursor-default' 
-                : 'bg-indigo-600 text-white hover:bg-indigo-700 active:scale-[0.98]'
-              }`}
-            >
-              {isPremium ? (
-                <>
-                  <Check className="w-5 h-5" />
-                  Assinatura Ativa
-                </>
-              ) : (
-                'Assinar agora'
+            <div className="space-y-4">
+              {errorMsg && (
+                <p className="text-[10px] text-rose-500 text-center font-bold bg-rose-50 py-2 rounded-lg">{errorMsg}</p>
               )}
-            </button>
+
+              {loading ? (
+                <div className="w-full py-4 text-center text-slate-300 text-sm font-medium">Verificando assunatura...</div>
+              ) : statusDisplay ? (
+                <div className={`w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2 ${statusDisplay.color}`}>
+                  {statusDisplay.icon}
+                  {statusDisplay.label}
+                </div>
+              ) : (
+                <button
+                  id="subscribe-btn"
+                  onClick={handleSubscribe}
+                  className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-lg active:scale-95"
+                >
+                  Assinar agora
+                </button>
+              )}
+            </div>
           </div>
           
-          <div className="absolute -right-4 -top-4 w-24 h-24 bg-indigo-50 rounded-full blur-2xl opacity-50" />
+          <div className="absolute -right-4 -top-4 w-32 h-32 bg-indigo-50 rounded-full blur-3xl opacity-30" />
         </div>
 
-        <div className="space-y-6 text-center">
-          <p className="text-slate-400 text-xs leading-relaxed px-4">
-            Cancele a qualquer momento direto pelo Mercado Pago. O acesso premium é liberado instantaneamente após a confirmação do pagamento.
+        <div className="space-y-6 text-center px-4">
+          <p className="text-slate-400 text-[10px] leading-relaxed font-medium">
+            Assinatura processada de forma segura via Mercado Pago. <br/>
+            Cancele a qualquer momento.
           </p>
         </div>
       </div>

@@ -8,6 +8,7 @@ import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import bodyParser from 'body-parser';
+import axios from 'axios';
 import Mercadopago from 'mercadopago';
 import SpotifyWebApi from 'spotify-web-api-node';
 
@@ -37,6 +38,15 @@ db.exec(`
     name TEXT,
     is_premium BOOLEAN DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS subscriptions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL UNIQUE,
+    subscription_id TEXT,
+    status TEXT NOT NULL DEFAULT 'inactive',
+    plan_id TEXT,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
   CREATE TABLE IF NOT EXISTS sessions (
@@ -100,7 +110,11 @@ app.post('/api/auth/login', async (req, res) => {
     user = db.prepare('SELECT * FROM users WHERE id = ?').get(info.lastInsertRowid);
   }
 
-  const token = jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET as string);
+  const token = jwt.sign(
+    { id: user.id, email: user.email }, 
+    process.env.JWT_SECRET as string,
+    { expiresIn: '7d' }
+  );
   res.json({ token, user: { id: user.id, email: user.email, name: user.name, is_premium: user.is_premium } });
 });
 
@@ -158,11 +172,113 @@ app.get('/api/spotify/resolve', async (req, res) => {
   }
 });
 
+// Mercado Pago Integration
+app.post('/api/create-subscription', authenticateToken, async (req: any, res) => {
+  const token = process.env.MERCADO_PAGO_ACCESS_TOKEN;
+  const appUrl = process.env.APP_URL || 'http://localhost:3000';
+
+  if (!token) {
+    return res.status(503).json({ error: 'Mercado Pago não configurado neste ambiente.' });
+  }
+
+  try {
+    const response = await axios.post(
+      'https://api.mercadopago.com/preapproval',
+      {
+        reason: 'Eixo Pleno - Plano Mensal',
+        auto_recurring: {
+          frequency: 1,
+          frequency_type: 'months',
+          transaction_amount: 14.90,
+          currency_id: 'BRL',
+        },
+        back_url: `${appUrl}/premium`,
+        payer_email: req.user.email,
+        external_reference: req.user.email,
+        status: 'pending',
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    res.json({ init_point: response.data.init_point });
+  } catch (e: any) {
+    console.error('MP Subscription Error:', e.response?.data || e.message);
+    res.status(500).json({ error: 'Erro ao criar assinatura no Mercado Pago.' });
+  }
+});
+
+app.get('/api/subscription-status', authenticateToken, (req: any, res) => {
+  const normalizedEmail = req.user.email.toLowerCase().trim();
+  const sub: any = db.prepare('SELECT * FROM subscriptions WHERE email = ?').get(normalizedEmail);
+  
+  if (!sub) return res.json({ status: 'inactive' });
+  
+  // Sync is_premium if inconsistency exists (bonus safety)
+  if (sub.status === 'authorized') {
+    db.prepare('UPDATE users SET is_premium = 1 WHERE email = ?').run(normalizedEmail);
+  } else {
+    db.prepare('UPDATE users SET is_premium = 0 WHERE email = ?').run(normalizedEmail);
+  }
+
+  res.json(sub);
+});
+
 // Mercado Pago Webhooks
-app.post('/api/webhooks/mercadopago', (req, res) => {
-  const { action, data } = req.body;
-  console.log('MP Webhook:', action, data);
-  // Logic to update user is_premium based on MP event
+app.post('/api/webhooks/mercadopago', async (req, res) => {
+  const { action, data, type } = req.body;
+  const mpToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
+
+  console.log('MP Webhook Received:', { action, type, id: data?.id });
+
+  // Note: Validation of X-Signature should be added here for production safety.
+  
+  if ((type === 'subscription' || type === 'preapproval')) {
+    if (!data?.id) {
+      return res.status(400).json({ error: 'Missing data.id for subscription event' });
+    }
+
+    if (!mpToken) {
+      console.warn('MP token missing during webhook processing');
+      return res.status(503).json({ error: 'Mercado Pago token not configured' });
+    }
+
+    try {
+      const response = await axios.get(`https://api.mercadopago.com/preapproval/${data.id}`, {
+        headers: { Authorization: `Bearer ${mpToken}` }
+      });
+      
+      const subData = response.data;
+      const email = subData.external_reference;
+
+      if (email) {
+        const normalizedEmail = email.toLowerCase().trim();
+        db.prepare(`
+          INSERT INTO subscriptions (email, status, subscription_id, plan_id, updated_at)
+          VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+          ON CONFLICT(email) DO UPDATE SET
+            status = excluded.status,
+            subscription_id = excluded.subscription_id,
+            updated_at = CURRENT_TIMESTAMP
+        `).run(normalizedEmail, subData.status, subData.id, subData.preapproval_plan_id);
+
+        if (subData.status === 'authorized') {
+          db.prepare('UPDATE users SET is_premium = 1 WHERE email = ?').run(normalizedEmail);
+        } else {
+          db.prepare('UPDATE users SET is_premium = 0 WHERE email = ?').run(normalizedEmail);
+        }
+      }
+    } catch (e: any) {
+      console.error('Webhook processing error:', e.response?.data || e.message);
+      // We return 200 anyway to prevent MP from retrying infinitely on logic errors, 
+      // but logging helps debugging.
+    }
+  }
+
   res.sendStatus(200);
 });
 

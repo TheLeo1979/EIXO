@@ -23,7 +23,7 @@ export type MoodType =
   | 'sobrecarregado' 
   | 'travado' 
   | 'inseguro' 
-  | 'desligar'
+  | 'sem conseguir desligar'
   | 'calmo'
   | 'cansado';
 

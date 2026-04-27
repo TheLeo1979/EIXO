@@ -40,7 +40,7 @@ export const MOOD_MAPPING: Record<MoodType, string[]> = {
   'sobrecarregado': ['grounding-54321', 'box-breathing'],
   'travado': ['ambient-focus'],
   'inseguro': ['box-breathing'],
-  'desligar': ['night-unwind'],
+  'sem conseguir desligar': ['night-unwind'],
   'calmo': ['ambient-focus'],
   'cansado': ['night-unwind']
 };

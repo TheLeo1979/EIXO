@@ -23,7 +23,7 @@ const MOODS: { type: MoodType; label: string; icon: any; color: string }[] = [
   { type: 'sobrecarregado', label: 'Sobrecarregado', icon: Heart, color: 'text-rose-500' },
   { type: 'travado', label: 'Travado', icon: Moon, color: 'text-indigo-500' },
   { type: 'inseguro', label: 'Inseguro', icon: Frown, color: 'text-blue-500' },
-  { type: 'desligar', label: 'Difícil Desligar', icon: Wind, color: 'text-emerald-500' },
+  { type: 'sem conseguir desligar', label: 'Difícil Desligar', icon: Wind, color: 'text-emerald-500' },
   { type: 'calmo', label: 'Calmo', icon: Smile, color: 'text-green-500' },
 ];
 

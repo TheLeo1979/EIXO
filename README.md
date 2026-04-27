@@ -1,25 +1,17 @@
 # Eixo — Recomposição Coerente
 
-O **Eixo** não é mais um app de meditação passiva. É uma ferramenta de intervenção tática para o sistema nervoso.
+## 🔑 Configuração (AI Studio)
+O applet exige as seguintes variáveis em **Settings > Secrets**:
+- JWT_SECRET: Chave privada para assinatura de tokens (Obrigatória).
+- MERCADO_PAGO_ACCESS_TOKEN: Token de acesso para assinaturas.
+- APP_URL: URL base do applet para retorno de pagamentos e webhooks.
 
-## 🧘 O que é o Eixo?
-Projetado para quem vive sob alta carga mental, o Eixo oferece recomposição imediata através de técnicas de respiração, sons binaurais e práticas de ancoragem (grounding).
+## 🧘 Proposta de Valor
+O Eixo é uma ferramenta de intervenção para o sistema nervoso. Baseado em um check-in emocional rápido, o app recomenda técnicas de respiração ou foco para o seu estado imediato.
 
-## 🔑 Configuração Inicial (Mandatório)
-Para rodar o applet com segurança, você deve configurar o segredo do JWT.
-
-1. Vá em **Settings > Secrets**.
-2. Adicione `JWT_SECRET` com uma chave segura.
-3. Reinicie o servidor se necessário.
-
-## 🌟 Diferenciais deste MVP
-- **Listen First**: O app pergunta como você está antes de sugerir qualquer coisa.
-- **Immediate Action**: Intervenções curtas e eficazes (4-10 min).
-- **Offline Ready**: Persistência local robusta para sua jornada.
-- **Privacy Focused**: Você escolhe se quer criar conta ou usar como visitante.
-
-## 🔧 Estrutura Técnica
-- **Autenticação**: JWT (JSON Web Tokens).
-- **Banco de Dados**: SQLite via `better-sqlite3`.
-- **Animações**: `motion/react` para biofeedback visual.
-- **Design**: Craftsmanship-focused Tailwind UI.
+## 📍 Estado Técnico do MVP
+- Autenticação: E-mail e senha com JWT (expiração de 7 dias).
+- Assinaturas: Mercado Pago implementado em nível MVP (Criação de assinaturas e Webhook).
+- Segurança: Webhook funcional, mas a validação de autenticidade X-Signature ainda precisa ser implementada para produção plena.
+- Jornada: Histórico persistido em SQLite para usuários logados.
+- Visitante: Suporte a uso temporário via LocalStorage.
