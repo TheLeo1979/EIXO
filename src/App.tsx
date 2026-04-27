@@ -28,7 +28,9 @@ import FeedbackView from './components/FeedbackView';
 import PremiumDetails from './components/PremiumDetails';
 import ProgressView from './components/ProgressView';
 
-type View = 'AUTH' | 'ONBOARDING' | 'DASHBOARD' | 'CHECK_IN' | 'INTERVENTION' | 'FEEDBACK' | 'PREMIUM' | 'PROGRESS';
+import AudioDebugView from './components/AudioDebugView';
+
+type View = 'AUTH' | 'ONBOARDING' | 'DASHBOARD' | 'CHECK_IN' | 'INTERVENTION' | 'FEEDBACK' | 'PREMIUM' | 'PROGRESS' | 'DEBUG_AUDIO';
 
 export default function App() {
   const [view, setView] = useState<View>('AUTH');
@@ -252,6 +254,14 @@ export default function App() {
                   onClick={() => setView('PROGRESS')}
                 />
               </div>
+              <div className="flex justify-center mt-4">
+                <button 
+                  onClick={() => setView('DEBUG_AUDIO')}
+                  className="text-[8px] text-slate-300 hover:text-slate-400 font-bold uppercase tracking-widest"
+                >
+                  Debug Audio
+                </button>
+              </div>
             </div>
 
             <footer className="pt-12 text-center space-y-6">
@@ -314,6 +324,12 @@ export default function App() {
             <ProgressView 
               onBack={() => setView('DASHBOARD')}
             />
+          </div>
+        )}
+
+        {view === 'DEBUG_AUDIO' && (
+          <div key="debug_audio_wrapper">
+            <AudioDebugView onBack={() => setView('DASHBOARD')} />
           </div>
         )}
       </AnimatePresence>
