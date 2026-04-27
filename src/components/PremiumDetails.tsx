@@ -20,7 +20,7 @@ export default function PremiumDetails({ user, onBack }: PremiumDetailsProps) {
       return;
     }
 
-    api.get('/api/subscription-status')
+    api.get('/subscription-status')
       .then(res => {
         setSubInfo(res.data);
         setLoading(false);
@@ -39,7 +39,7 @@ export default function PremiumDetails({ user, onBack }: PremiumDetailsProps) {
 
     try {
       setErrorMsg('');
-      const res = await api.post('/api/create-subscription');
+      const res = await api.post('/create-subscription');
       if (res.data.init_point) {
         window.location.href = res.data.init_point;
       }
