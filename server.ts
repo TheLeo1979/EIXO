@@ -68,7 +68,12 @@ db.exec(`
 // Services Initialization
 // Spotify - Flexible initialization
 let spotifyApi: SpotifyWebApi | null = null;
-if (process.env.SPOTIFY_CLIENT_ID && process.env.SPOTIFY_CLIENT_SECRET) {
+const hasSpotifyConfig = process.env.SPOTIFY_CLIENT_ID && 
+                        process.env.SPOTIFY_CLIENT_ID !== 'YOUR_SPOTIFY_CLIENT_ID' &&
+                        process.env.SPOTIFY_CLIENT_SECRET &&
+                        process.env.SPOTIFY_CLIENT_SECRET !== 'YOUR_SPOTIFY_CLIENT_SECRET';
+
+if (hasSpotifyConfig) {
   spotifyApi = new SpotifyWebApi({
     clientId: process.env.SPOTIFY_CLIENT_ID,
     clientSecret: process.env.SPOTIFY_CLIENT_SECRET
@@ -158,10 +163,10 @@ app.get('/api/spotify/resolve', async (req, res) => {
 
   try {
     // Basic stub if no credentials
-    if (!process.env.SPOTIFY_CLIENT_ID) {
+    if (!spotifyApi) {
       return res.json({ 
         tracks: [
-          { id: '1', name: `Relaxing Track for ${query}`, artist: 'Eixo Ambient', duration: '3:45' }
+          { id: '1', name: `Relaxing Track for ${query} (Fallback)`, artist: 'Eixo Ambient', duration: '3:45' }
         ] 
       });
     }
