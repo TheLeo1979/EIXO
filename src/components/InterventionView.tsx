@@ -28,8 +28,8 @@ export default function InterventionView({ session, onComplete, onCancel }: Inte
     
     if (stage === 'ACTIVE' && intervention.type === 'audio') {
       const audio = new Audio(intervention.id === 'ambient-focus' 
-        ? 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' 
-        : 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'
+        ? '/audio/ambient-focus.mp3' 
+        : '/audio/night-unwind.mp3'
       );
       audio.play().catch(e => console.warn('Audio playback prevented by browser', e));
       

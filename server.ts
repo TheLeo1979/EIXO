@@ -160,6 +160,16 @@ app.get('/api/sessions/history', authenticateToken, (req: any, res) => {
   res.json(sessions);
 });
 
+app.get('/api/sessions/today-count', authenticateToken, (req: any, res) => {
+  const result: any = db.prepare(`
+    SELECT COUNT(*) as count 
+    FROM sessions 
+    WHERE user_id = ? 
+    AND DATE(created_at) = DATE('now')
+  `).get(req.user.id);
+  res.json({ count: result.count });
+});
+
 // Spotify Tracks Resolver
 app.get('/api/spotify/resolve', async (req, res) => {
   const { query } = req.query;

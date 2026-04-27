@@ -86,20 +86,36 @@ export default function App() {
     setView('DASHBOARD');
   };
 
-  const handleCheckInComplete = (mood: MoodType, intensity: number) => {
+  const handleCheckInComplete = async (mood: MoodType, intensity: number) => {
     // Check for daily limit if not premium
     if (!user?.is_premium) {
-      const historyKey = user.id === -1 ? 'eixo_guest_history' : `eixo_history_${user.id}`;
-      const history = JSON.parse(localStorage.getItem(historyKey) || '[]');
-      const sessionsToday = history.filter((s: any) => {
-        const date = new Date(s.created_at || s.date);
-        return date.toDateString() === new Date().toDateString();
-      });
+      if (user?.id === -1) {
+        // Guest mode: check localStorage
+        const history = JSON.parse(localStorage.getItem('eixo_guest_history') || '[]');
+        const sessionsToday = history.filter((s: any) => {
+          const date = new Date(s.created_at || s.date);
+          return date.toDateString() === new Date().toDateString();
+        });
 
-      if (sessionsToday.length >= 1) {
-        alert('Limite diário atingido. Assine o Plano Pleno para sessões ilimitadas e histórico na nuvem.');
-        setView('PREMIUM');
-        return;
+        if (sessionsToday.length >= 1) {
+          alert('Limite diário atingido. Assine o Plano Pleno para sessões ilimitadas e histórico na nuvem.');
+          setView('PREMIUM');
+          return;
+        }
+      } else {
+        // Logged-in non-premium: check backend
+        try {
+          const { data } = await api.get('/sessions/today-count');
+          if (data.count >= 1) {
+            alert('Limite diário atingido. Assine o Plano Pleno para sessões ilimitadas e histórico na nuvem.');
+            setView('PREMIUM');
+            return;
+          }
+        } catch (e) {
+          console.error('Failed to check daily limit:', e);
+          alert('Não foi possível verificar seu limite diário agora. Tente novamente em instantes.');
+          return;
+        }
       }
     }
 

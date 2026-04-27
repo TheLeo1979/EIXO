@@ -16,7 +16,8 @@ O Eixo é uma ferramenta de intervenção para o sistema nervoso. Baseado em um 
 
 ## 📍 Estado Técnico do MVP
 - Autenticação: E-mail e senha com JWT (expiração de 7 dias).
-- Assinaturas: Mercado Pago implementado em nível MVP (Criação de assinaturas e Webhook).
+- Assinaturas: Mercado Pago implementado como integração opcional (Webhooks seguros).
+- Áudio: Intervenções de áudio controladas localmente em `/audio`.
+- Jornada: Limite diário de 1 sessão para usuários gratuitos (vía backend ou local).
 - Segurança: Webhook protegido com validação de autenticidade X-Signature.
-- Jornada: Histórico persistido em SQLite para usuários logados.
 - Visitante: Suporte a uso temporário via LocalStorage.
